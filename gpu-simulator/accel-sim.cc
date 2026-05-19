@@ -26,8 +26,7 @@ accel_sim_framework::accel_sim_framework(int argc, const char **argv) {
   std::cout << "Accel-Sim [build " << g_accelsim_version << "]";
   m_gpgpu_context = new gpgpu_context();
 
-  m_gpgpu_sim =
-      gpgpu_trace_sim_init_perf_model(argc, argv, m_gpgpu_context, &tconfig);
+  m_gpgpu_sim = gpgpu_trace_sim_init_perf_model(argc, argv, m_gpgpu_context, &tconfig);
   m_gpgpu_sim->init();
 
   tracer = trace_parser(tconfig.get_traces_filename());
@@ -193,7 +192,7 @@ gpgpu_sim *accel_sim_framework::gpgpu_trace_sim_init_perf_model(
     int argc, const char *argv[], gpgpu_context *m_gpgpu_context,
     trace_config *m_config) {
   srand(1);
-  print_splash();
+  print_splash(); // cuda-sim.cc - line 2254
 
   option_parser_t opp = option_parser_create();
 
@@ -202,10 +201,8 @@ gpgpu_sim *accel_sim_framework::gpgpu_trace_sim_init_perf_model(
 
   icnt_reg_options(opp);
 
-  m_gpgpu_context->the_gpgpusim->g_the_gpu_config =
-      new gpgpu_sim_config(m_gpgpu_context);
-  m_gpgpu_context->the_gpgpusim->g_the_gpu_config->reg_options(
-      opp);  // register GPU microrachitecture options
+  m_gpgpu_context->the_gpgpusim->g_the_gpu_config = new gpgpu_sim_config(m_gpgpu_context);
+  m_gpgpu_context->the_gpgpusim->g_the_gpu_config->reg_options(opp);  // register GPU microrachitecture options
   m_config->reg_options(opp);
 
   option_parser_cmdline(opp, argc, argv);  // parse configuration options
@@ -217,12 +214,9 @@ gpgpu_sim *accel_sim_framework::gpgpu_trace_sim_init_perf_model(
   assert(setlocale(LC_NUMERIC, "C"));
   m_gpgpu_context->the_gpgpusim->g_the_gpu_config->init();
 
-  m_gpgpu_context->the_gpgpusim->g_the_gpu = new trace_gpgpu_sim(
-      *(m_gpgpu_context->the_gpgpusim->g_the_gpu_config), m_gpgpu_context);
+  m_gpgpu_context->the_gpgpusim->g_the_gpu = new trace_gpgpu_sim(* (m_gpgpu_context->the_gpgpusim->g_the_gpu_config), m_gpgpu_context);
 
-  m_gpgpu_context->the_gpgpusim->g_stream_manager =
-      new stream_manager((m_gpgpu_context->the_gpgpusim->g_the_gpu),
-                         m_gpgpu_context->func_sim->g_cuda_launch_blocking);
+  m_gpgpu_context->the_gpgpusim->g_stream_manager = new stream_manager((m_gpgpu_context->the_gpgpusim->g_the_gpu), m_gpgpu_context->func_sim->g_cuda_launch_blocking);
 
   m_gpgpu_context->the_gpgpusim->g_simulation_starttime = time((time_t *)NULL);
 
