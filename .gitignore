@@ -16,3 +16,7 @@ compile_commands.json
 .cache
 .cursorrules
 CLAUDE.md
+.agents/
+AI-assissted-refactor-workflow/
+output_patch*.txt
+todo.md
