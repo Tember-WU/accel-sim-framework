@@ -3,6 +3,16 @@
 
 #include "accel-sim.h"
 
+namespace {
+
+void print_simulation_exit_markers() {
+  printf("GPGPU-Sim: *** simulation thread exiting ***\n");
+  printf("GPGPU-Sim: *** exit detected ***\n");
+  fflush(stdout);
+}
+
+}  // namespace
+
 /* TO DO:
  * NOTE: the current version of trace-driven is functionally working fine,
  * but we still need to improve traces compression and simulation speed.
@@ -31,9 +41,7 @@ int main(int argc, const char **argv) {
 
   // we print this message to inform the gpgpu-simulation stats_collect script
   // that we are done
-  printf("GPGPU-Sim: *** simulation thread exiting ***\n");
-  printf("GPGPU-Sim: *** exit detected ***\n");
-  fflush(stdout);
+  print_simulation_exit_markers();
 
   return 0;
 }

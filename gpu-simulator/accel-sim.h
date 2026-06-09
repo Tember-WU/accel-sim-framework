@@ -1,3 +1,6 @@
+#ifndef ACCEL_SIM_H
+#define ACCEL_SIM_H
+
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
@@ -67,8 +70,12 @@ class accel_sim_framework {
   unsigned window_size;
   unsigned commandlist_index;
 
+  void launch_ready_kernels();
+
   std::vector<unsigned long long> busy_streams;
   std::vector<trace_kernel_info_t *> kernels_info;
   std::vector<trace_command> commandlist;
 
 };
+
+#endif

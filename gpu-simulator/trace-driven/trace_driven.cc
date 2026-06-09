@@ -57,6 +57,15 @@
 #include "option_parser.h"
 #include "trace_driven.h"
 
+namespace {
+
+void parse_latency_config(const char *config, unsigned &latency,
+                          unsigned &initiation) {
+  sscanf(config, "%u,%u", &latency, &initiation);
+}
+
+}  // namespace
+
 const trace_warp_inst_t *trace_shd_warp_t::get_next_trace_inst() {
   if (trace_pc < warp_traces.size()) {
     trace_warp_inst_t *new_inst =
@@ -452,16 +461,19 @@ void trace_config::reg_options(option_parser_t opp) {
 }
 
 void trace_config::parse_config() {
-  sscanf(trace_opcode_latency_initiation_int, "%u,%u", &int_latency, &int_init);
-  sscanf(trace_opcode_latency_initiation_sp, "%u,%u", &fp_latency, &fp_init);
-  sscanf(trace_opcode_latency_initiation_dp, "%u,%u", &dp_latency, &dp_init);
-  sscanf(trace_opcode_latency_initiation_sfu, "%u,%u", &sfu_latency, &sfu_init);
-  sscanf(trace_opcode_latency_initiation_tensor, "%u,%u", &tensor_latency,
-         &tensor_init);
+  parse_latency_config(trace_opcode_latency_initiation_int, int_latency,
+                       int_init);
+  parse_latency_config(trace_opcode_latency_initiation_sp, fp_latency, fp_init);
+  parse_latency_config(trace_opcode_latency_initiation_dp, dp_latency, dp_init);
+  parse_latency_config(trace_opcode_latency_initiation_sfu, sfu_latency,
+                       sfu_init);
+  parse_latency_config(trace_opcode_latency_initiation_tensor, tensor_latency,
+                       tensor_init);
 
   for (unsigned j = 0; j < SPECIALIZED_UNIT_NUM; ++j) {
-    sscanf(trace_opcode_latency_initiation_specialized_op[j], "%u,%u",
-           &specialized_unit_latency[j], &specialized_unit_initiation[j]);
+    parse_latency_config(trace_opcode_latency_initiation_specialized_op[j],
+                         specialized_unit_latency[j],
+                         specialized_unit_initiation[j]);
   }
 }
 void trace_config::set_latency(unsigned category, unsigned &latency,

@@ -1,6 +1,25 @@
 #include "accel-sim.h"
 #include "accelsim_version.h"
 
+namespace {
+
+bool is_stream_busy(const std::vector<unsigned long long> &busy_streams,
+                    unsigned long long cuda_stream_id) {
+  for (auto stream_id : busy_streams) {
+    if (stream_id == cuda_stream_id) return true;
+  }
+  return false;
+}
+
+void report_cycle_limit_stop() {
+  printf(
+      "GPGPU-Sim: ** break due to reaching the maximum cycles (or "
+      "instructions) **\n");
+  fflush(stdout);
+}
+
+}  // namespace
+
 accel_sim_framework::accel_sim_framework(std::string config_file,
                                           std::string trace_file) {
   std::cout << "Accel-Sim [build " << g_accelsim_version << "]";
@@ -48,24 +67,7 @@ void accel_sim_framework::simulation_loop() {
   while (commandlist_index < commandlist.size() || !kernels_info.empty()) {
     parse_commandlist();
 
-    // Launch all kernels within window that are on a stream that isn't already
-    // running
-    for (auto k : kernels_info) {
-      bool stream_busy = false;
-      for (auto s : busy_streams) {
-        if (s == k->get_cuda_stream_id()) stream_busy = true;
-      }
-      if (!stream_busy && m_gpgpu_sim->can_start_kernel() &&
-          !k->was_launched()) {
-        std::cout << "launching kernel name: " << k->get_name()
-                  << " uid: " << k->get_uid()
-                  << " cuda_stream_id: " << k->get_cuda_stream_id()
-                  << std::endl;
-        m_gpgpu_sim->launch(k);
-        k->set_launched();
-        busy_streams.push_back(k->get_cuda_stream_id());
-      }
-    }
+    launch_ready_kernels();
 
     unsigned finished_kernel_uid = simulate();
     // cleanup finished kernel
@@ -80,11 +82,26 @@ void accel_sim_framework::simulation_loop() {
     }
 
     if (m_gpgpu_sim->cycle_insn_cta_max_hit()) {
-      printf(
-          "GPGPU-Sim: ** break due to reaching the maximum cycles (or "
-          "instructions) **\n");
-      fflush(stdout);
+      report_cycle_limit_stop();
       break;
+    }
+  }
+}
+
+void accel_sim_framework::launch_ready_kernels() {
+  // Launch all kernels within window that are on a stream that isn't already
+  // running
+  for (auto k : kernels_info) {
+    bool stream_busy = is_stream_busy(busy_streams, k->get_cuda_stream_id());
+    if (!stream_busy && m_gpgpu_sim->can_start_kernel() &&
+        !k->was_launched()) {
+      std::cout << "launching kernel name: " << k->get_name()
+                << " uid: " << k->get_uid()
+                << " cuda_stream_id: " << k->get_cuda_stream_id()
+                << std::endl;
+      m_gpgpu_sim->launch(k);
+      k->set_launched();
+      busy_streams.push_back(k->get_cuda_stream_id());
     }
   }
 }
